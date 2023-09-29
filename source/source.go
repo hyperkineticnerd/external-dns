@@ -59,6 +59,8 @@ const (
 	controllerAnnotationValue = "dns-controller"
 	// The annotation used for defining the desired hostname
 	internalHostnameAnnotationKey = "external-dns.alpha.kubernetes.io/internal-hostname"
+	// The annotation used for defining the desired SRV service name
+	serviceNameAnnotationKey = "external-dns.alpha.kubernetes.io/service"
 )
 
 const (
@@ -234,6 +236,14 @@ func getTargetsFromTargetAnnotation(annotations map[string]string) endpoint.Targ
 		}
 	}
 	return targets
+}
+
+func getServiceFromServiceNameAnnotation(annotations map[string]string) string {
+	serviceAnnotation, exists := annotations[serviceNameAnnotationKey]
+	if !exists {
+		return ""
+	}
+	return serviceAnnotation
 }
 
 // suitableType returns the DNS resource record type suitable for the target.

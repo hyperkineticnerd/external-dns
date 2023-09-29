@@ -639,7 +639,10 @@ func (sc *serviceSource) extractNodePortEndpoints(svc *v1.Service, nodeTargets e
 			// take the service name from the K8s Service object
 			// it is safe to use since it is DNS compatible
 			// see https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-label-names
-			serviceName := svc.ObjectMeta.Name
+			serviceName := getServiceFromServiceNameAnnotation(svc.Annotations)
+			if serviceName == "" {
+				serviceName = svc.ObjectMeta.Name
+			}
 
 			// figure out the protocol
 			protocol := strings.ToLower(string(port.Protocol))
