@@ -90,6 +90,9 @@ func (z zoneService) ZoneIDByName(zoneName string) (string, error) {
 }
 
 func (z zoneService) CreateDNSRecord(ctx context.Context, zoneID string, rr cloudflare.DNSRecord) (*cloudflare.DNSRecordResponse, error) {
+	if rr.Type == endpoint.RecordTypeSRV {
+		rr = z.CreateSRVRecord(rr)
+	}
 	return z.service.CreateDNSRecord(ctx, zoneID, rr)
 }
 
@@ -463,4 +466,38 @@ func groupByNameAndType(records []cloudflare.DNSRecord) []*endpoint.Endpoint {
 // Needed because some parameters require a pointer.
 func boolPtr(b bool) *bool {
 	return &b
+}
+
+type SRVRecord struct {
+	Service  string `json:"service"`
+	Protocol string `json:"protocol"`
+	Name     string `json:"name"`
+	Priority int    `json:"priority"`
+	Weight   int    `json:"weight"`
+	Port     int    `json:"port"`
+	Target   string `json:"target"`
+}
+
+func (z zoneService) CreateSRVRecord(rr cloudflare.DNSRecord) cloudflare.DNSRecord {
+	var priority int
+	var weight int
+	var port int
+	var target string
+	var service string
+	var protocol string
+	var hostname string
+
+	fmt.Sscanf(rr.Content, "%d %d %d %s", &priority, &weight, &port, &target)
+	fmt.Sscanf(rr.Name, "_%s._%s.%s", service, protocol, hostname)
+
+	rr.Data = SRVRecord{
+		Name:     hostname,
+		Priority: priority,
+		Weight:   weight,
+		Port:     port,
+		Service:  service,
+		Protocol: protocol,
+		Target:   target,
+	}
+	return rr
 }
