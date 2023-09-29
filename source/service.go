@@ -611,6 +611,11 @@ func (sc *serviceSource) extractNodePortTargets(svc *v1.Service) (endpoint.Targe
 		}
 	}
 
+	targetHostnames := getTargetsFromTargetAnnotation(svc.Annotations)
+	if len(targetHostnames) > 0 {
+		return targetHostnames, nil
+	}
+
 	access := getAccessFromAnnotations(svc.Annotations)
 	if access == "public" {
 		return externalIPs, nil
