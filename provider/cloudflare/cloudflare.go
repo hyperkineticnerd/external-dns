@@ -472,7 +472,7 @@ func boolPtr(b bool) *bool {
 
 type SRVRecord struct {
 	Service  string `json:"service"`
-	Protocol string `json:"protocol"`
+	Protocol string `json:"proto"`
 	Name     string `json:"name"`
 	Priority int    `json:"priority"`
 	Weight   int    `json:"weight"`
