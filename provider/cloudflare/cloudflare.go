@@ -297,7 +297,6 @@ func (p *CloudFlareProvider) submitChanges(ctx context.Context, changes []*cloud
 			if change.ResourceRecord.Type == endpoint.RecordTypeSRV {
 				change.ResourceRecord = p.FixSRVRecord(change.ResourceRecord)
 			}
-
 			logFields := log.Fields{
 				"record":  change.ResourceRecord.Name,
 				"type":    change.ResourceRecord.Type,
@@ -484,39 +483,30 @@ type SRVRecord struct {
 }
 
 func (p *CloudFlareProvider) FixSRVRecord(rr cloudflare.DNSRecord) cloudflare.DNSRecord {
-	var (
-		priority int
-		weight   int
-		port     int
-		target   string
-		service  string
-		protocol string
-		hostname string
-	)
+	var priority int
+	var weight int
+	var port int
+	var target string
+	var service string
+	var protocol string
+	var hostname string
 
-	log.Debugf("Content: %s", rr.Content)
+	rr.Content = strings.Replace(rr.Content, " ", "\t", -1)
+	// log.Debugf("Content: %s", rr.Content)
 	fmt.Sscanf(rr.Content, "%d %d %d %s", &priority, &weight, &port, &target)
 	name := strings.SplitN(rr.Name, ".", 3)
 	service = name[0]
 	protocol = name[1]
 	hostname = name[2]
 
-	// rr.Name = strings.Split(hostname, ".")[0]
-	rr.Name = hostname
-
-	rr.Data = SRVRecord{
-		Name:     hostname,
-		Priority: priority,
-		Weight:   weight,
-		Port:     port,
-		Service:  service,
-		Protocol: protocol,
-		Target:   target,
+	rr.Data = map[string]interface{}{
+		"name":     hostname,
+		"port":     port,
+		"priority": priority,
+		"proto":    protocol,
+		"service":  service,
+		"target":   target,
+		"weight":   weight,
 	}
-
-	// rr.Content = struct{}
-	// rr.Data, _ = json.Marshal(rr.Data)
-	log.Debugf("Data: %s", rr.Data)
-
 	return rr
 }

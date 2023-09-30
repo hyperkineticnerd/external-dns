@@ -261,8 +261,8 @@ func filterRecordsForPlan(records []*endpoint.Endpoint, domainFilter endpoint.Do
 			filtered = append(filtered, record)
 		}
 		if record.RecordType == "SRV" {
-			log.Debugf("Plan = filterRecordsForPlan = (almost) filtered: %s", record)
 			filtered = append(filtered, record)
+			// log.Debugf("Plan = filterRecordsForPlan = (almost) filtered: %s", record)
 		}
 	}
 
