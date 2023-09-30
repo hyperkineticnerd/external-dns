@@ -239,11 +239,7 @@ func getTargetsFromTargetAnnotation(annotations map[string]string) endpoint.Targ
 }
 
 func getServiceFromServiceNameAnnotation(annotations map[string]string) string {
-	serviceAnnotation, exists := annotations[serviceNameAnnotationKey]
-	if !exists {
-		return ""
-	}
-	return serviceAnnotation
+	return annotations[serviceNameAnnotationKey]
 }
 
 // suitableType returns the DNS resource record type suitable for the target.
