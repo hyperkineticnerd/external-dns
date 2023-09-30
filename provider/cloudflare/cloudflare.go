@@ -91,7 +91,7 @@ func (z zoneService) ZoneIDByName(zoneName string) (string, error) {
 
 func (z zoneService) CreateDNSRecord(ctx context.Context, zoneID string, rr cloudflare.DNSRecord) (*cloudflare.DNSRecordResponse, error) {
 	if rr.Type == endpoint.RecordTypeSRV {
-		rr = z.CreateSRVRecord(rr)
+		rr = z.FixSRVRecord(rr)
 	}
 	return z.service.CreateDNSRecord(ctx, zoneID, rr)
 }
@@ -478,7 +478,7 @@ type SRVRecord struct {
 	Target   string `json:"target"`
 }
 
-func (z zoneService) CreateSRVRecord(rr cloudflare.DNSRecord) cloudflare.DNSRecord {
+func (z zoneService) FixSRVRecord(rr cloudflare.DNSRecord) cloudflare.DNSRecord {
 	var priority int
 	var weight int
 	var port int
