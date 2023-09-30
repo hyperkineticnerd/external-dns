@@ -296,11 +296,13 @@ func (p *CloudFlareProvider) submitChanges(ctx context.Context, changes []*cloud
 		}
 		for _, change := range changes {
 			logFields := log.Fields{
-				"record": change.ResourceRecord.Name,
-				"type":   change.ResourceRecord.Type,
-				"ttl":    change.ResourceRecord.TTL,
-				"action": change.Action,
-				"zone":   zoneID,
+				"record":  change.ResourceRecord.Name,
+				"type":    change.ResourceRecord.Type,
+				"ttl":     change.ResourceRecord.TTL,
+				"action":  change.Action,
+				"zone":    zoneID,
+				"content": change.ResourceRecord.Content,
+				"data":    change.ResourceRecord.Data,
 			}
 
 			log.WithFields(logFields).Info("Changing record.")
