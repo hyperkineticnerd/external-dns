@@ -260,6 +260,10 @@ func filterRecordsForPlan(records []*endpoint.Endpoint, domainFilter endpoint.Do
 		if IsManagedRecord(record.RecordType, managedRecords) {
 			filtered = append(filtered, record)
 		}
+		if record.RecordType == "SRV" {
+			log.Debugf("Plan = filterRecordsForPlan = (almost) filtered: %s", record)
+			filtered = append(filtered, record)
+		}
 	}
 
 	return filtered

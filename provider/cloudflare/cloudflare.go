@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	cloudflare "github.com/cloudflare/cloudflare-go"
 	log "github.com/sirupsen/logrus"
@@ -90,9 +91,6 @@ func (z zoneService) ZoneIDByName(zoneName string) (string, error) {
 }
 
 func (z zoneService) CreateDNSRecord(ctx context.Context, zoneID string, rr cloudflare.DNSRecord) (*cloudflare.DNSRecordResponse, error) {
-	if rr.Type == endpoint.RecordTypeSRV {
-		rr = z.FixSRVRecord(rr)
-	}
 	return z.service.CreateDNSRecord(ctx, zoneID, rr)
 }
 
@@ -233,7 +231,7 @@ func (p *CloudFlareProvider) Records(ctx context.Context) ([]*endpoint.Endpoint,
 // ApplyChanges applies a given set of changes in a given zone.
 func (p *CloudFlareProvider) ApplyChanges(ctx context.Context, changes *plan.Changes) error {
 	cloudflareChanges := []*cloudFlareChange{}
-
+	log.Debug("= cloudflare = ApplyChanges =")
 	for _, endpoint := range changes.Create {
 		for _, target := range endpoint.Targets {
 			cloudflareChanges = append(cloudflareChanges, p.newCloudFlareChange(cloudFlareCreate, endpoint, target))
@@ -281,6 +279,7 @@ func (p *CloudFlareProvider) submitChanges(ctx context.Context, changes []*cloud
 	if len(changes) == 0 {
 		return nil
 	}
+	log.Debug("= cloudflare = submitChanges =")
 
 	zones, err := p.Zones(ctx)
 	if err != nil {
@@ -295,6 +294,10 @@ func (p *CloudFlareProvider) submitChanges(ctx context.Context, changes []*cloud
 			return fmt.Errorf("could not fetch records from zone, %v", err)
 		}
 		for _, change := range changes {
+			if change.ResourceRecord.Type == endpoint.RecordTypeSRV {
+				change.ResourceRecord = p.FixSRVRecord(change.ResourceRecord)
+			}
+
 			logFields := log.Fields{
 				"record":  change.ResourceRecord.Name,
 				"type":    change.ResourceRecord.Type,
@@ -480,7 +483,7 @@ type SRVRecord struct {
 	Target   string `json:"target"`
 }
 
-func (z zoneService) FixSRVRecord(rr cloudflare.DNSRecord) cloudflare.DNSRecord {
+func (p *CloudFlareProvider) FixSRVRecord(rr cloudflare.DNSRecord) cloudflare.DNSRecord {
 	var (
 		priority int
 		weight   int
@@ -491,8 +494,15 @@ func (z zoneService) FixSRVRecord(rr cloudflare.DNSRecord) cloudflare.DNSRecord 
 		hostname string
 	)
 
+	log.Debugf("Content: %s", rr.Content)
 	fmt.Sscanf(rr.Content, "%d %d %d %s", &priority, &weight, &port, &target)
-	fmt.Sscanf(rr.Name, "_%s._%s.%s", service, protocol, hostname)
+	name := strings.SplitN(rr.Name, ".", 3)
+	service = name[0]
+	protocol = name[1]
+	hostname = name[2]
+
+	// rr.Name = strings.Split(hostname, ".")[0]
+	rr.Name = hostname
 
 	rr.Data = SRVRecord{
 		Name:     hostname,
@@ -503,5 +513,10 @@ func (z zoneService) FixSRVRecord(rr cloudflare.DNSRecord) cloudflare.DNSRecord 
 		Protocol: protocol,
 		Target:   target,
 	}
+
+	// rr.Content = struct{}
+	// rr.Data, _ = json.Marshal(rr.Data)
+	log.Debugf("Data: %s", rr.Data)
+
 	return rr
 }
