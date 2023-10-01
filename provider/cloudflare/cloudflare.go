@@ -483,13 +483,15 @@ type SRVRecord struct {
 }
 
 func (p *CloudFlareProvider) FixSRVRecord(rr cloudflare.DNSRecord) cloudflare.DNSRecord {
-	var priority int
-	var weight int
-	var port int
-	var target string
-	var service string
-	var protocol string
-	var hostname string
+	var (
+		priority int
+		weight   int
+		port     int
+		target   string
+		service  string
+		protocol string
+		hostname string
+	)
 
 	rr.Content = strings.Replace(rr.Content, " ", "\t", -1)
 	// log.Debugf("Content: %s", rr.Content)
