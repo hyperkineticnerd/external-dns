@@ -481,13 +481,15 @@ type SRVRecord struct {
 }
 
 func (z zoneService) FixSRVRecord(rr cloudflare.DNSRecord) cloudflare.DNSRecord {
-	var priority int
-	var weight int
-	var port int
-	var target string
-	var service string
-	var protocol string
-	var hostname string
+	var (
+		priority int
+		weight   int
+		port     int
+		target   string
+		service  string
+		protocol string
+		hostname string
+	)
 
 	fmt.Sscanf(rr.Content, "%d %d %d %s", &priority, &weight, &port, &target)
 	fmt.Sscanf(rr.Name, "_%s._%s.%s", service, protocol, hostname)
